@@ -1,4 +1,4 @@
 aquarium
 ========
 
-A collection of Python scripts for job management on SHARCNET.
+A Python script for wrapping job management on SHARCNET.
