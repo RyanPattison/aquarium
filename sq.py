@@ -20,8 +20,8 @@ JOBS = ([], {})
 
 def sub(jobs):
     for job in jobs:
-      call('sqsub -r {} -m {} {}'.format(
-          job.cpu_time_limit, job.virtual_mem_limit, job.command))
+      call('sqsub -r {} {}'.format(
+          job.cpu_time_limit, job.command))
 
 
 def kill(jobs):
@@ -56,6 +56,13 @@ def save(jobs, filename):
 
 def update():
     pass
+
+
+def job(command, time='1m'):
+    j = argparse.Namespace()
+    j.command = command
+    j.cpu_time_limit = duration(time)
+    return j
 
 
 def parse_args():
@@ -95,16 +102,22 @@ def parse_state_table(lines, keynames):
     return details
 
 
+def duration(s):
+    durkey = dict(s=1,m=60,h=60*60,d=60*60*24)
+    return datetime.timedelta(int(s[:-1]) * durkey[s[-1]])
+
+
+def memsize(s):
+    memkey = dict(K=1,M=2,G=3,T=4,P=5)
+    return float(s[:-1]) * (1024 ** memkey[s[-1].upper()])
+
+
 if __name__ == "__main__":
     args = parse_args()
 
     dateformat = '%a %b %d %H:%M:%S %Y'
     date = lambda s: datetime.datetime.strptime(
             ' '.join(s.split()[:5]), dateformat)
-    memkey = dict(K=1,M=2,G=3,T=4,P=5)
-    mem = lambda s: float(s[:-1]) * (1024 ** memkey[s[-1].upper()])
-    durkey = dict(s=1,m=60,h=60*60,d=60*60*24)
-    duration = lambda s: datetime.timedelta(int(s[:-1]) * durkey[s[-1]])
     arglist = lambda s: s.strip()
     path = lambda i: i
     snames = dict(R=RUNNING, Q=QUEUED, Z=SLEEPING,
@@ -126,7 +139,7 @@ if __name__ == "__main__":
         'should end': date,
         'elapsed limit': duration,
         'cpu time limit': duration,
-        'virtual mem limit': mem,
+        'virtual mem limit': memsize,
    }
 
     jobs = []
